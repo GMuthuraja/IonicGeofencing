@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { Geofence } from '@ionic-native/geofence/ngx';
-import { Geolocation, Geoposition } from '@ionic-native/geolocation/ngx';
+import { Geolocation } from '@ionic-native/geolocation/ngx';
 import { LocalNotifications } from '@ionic-native/local-notifications/ngx';
 import { BackgroundGeolocation, BackgroundGeolocationConfig, BackgroundGeolocationEvents, BackgroundGeolocationResponse } from '@ionic-native/background-geolocation/ngx';
-
+declare var LocalNotification: any;
 
 @Component({
   selector: 'app-home',
@@ -23,13 +23,6 @@ export class HomePage {
     private geolocation: Geolocation,
     private localNotifications: LocalNotifications,
     private backgroundGeolocation: BackgroundGeolocation) {
-
-    this.registerMyLocation();
-
-    setTimeout(() => {
-      this.enableTracking();
-    }, 2000);
-
     // this.geolocation.watchPosition().subscribe(position => {
     //   if ((position as Geoposition).coords != undefined) {
     //     let geoposition = (position as Geoposition);
@@ -59,45 +52,47 @@ export class HomePage {
   }
 
 
-  addGeofence() {
-    //this.geofence.removeAll();
-    this.geolocation.getCurrentPosition({ enableHighAccuracy: true }).then(data => {
-      //options describing geofence
-      let fence = {
-        id: '69ca1b88-6fbe-4e80-a4d4-ff4d3748acdb', //any unique ID
-        latitude: data.coords.latitude, //center of geofence radius
-        longitude: data.coords.longitude,
-        //latitude: 8.539574, //center of geofence radius
-        //longitude: 77.766876,
-        radius: 50, //radius to edge of geofence in meters
-        transitionType: 3, //see 'Transition Types' below
-        notification: { //notification settings
-          id: 1, //any unique ID 
-          title: 'Welcome to Jeddah Airport', //notification title
-          text: 'Dear Employee \nWelcome to Jeddah Airport, Hope you have a wonderful experience with SAUDIA', //notification body
-          openAppOnClick: true //open app when notification is tapped
-        }
-      }
+  // addGeofence() {
+  //   //this.geofence.removeAll();
+  //   this.geolocation.getCurrentPosition({ enableHighAccuracy: true }).then(data => {
+  //     //options describing geofence
+  //     let fence = {
+  //       id: '69ca1b88-6fbe-4e80-a4d4-ff4d3748acdb', //any unique ID
+  //       latitude: data.coords.latitude, //center of geofence radius
+  //       longitude: data.coords.longitude,
+  //       //latitude: 8.539574, //center of geofence radius
+  //       //longitude: 77.766876,
+  //       radius: 50, //radius to edge of geofence in meters
+  //       transitionType: 3, //see 'Transition Types' below
+  //       notification: { //notification settings
+  //         id: 1, //any unique ID 
+  //         title: 'Welcome to Jeddah Airport', //notification title
+  //         text: 'Dear Employee \nWelcome to Jeddah Airport, Hope you have a wonderful experience with SAUDIA', //notification body
+  //         openAppOnClick: true //open app when notification is tapped
+  //       }
+  //     }
 
-      this.geofence.addOrUpdate(fence).then(() => {
-        this.registeredLat = data.coords.latitude;
-        this.registeredLon = data.coords.longitude;
-        alert('Geofence added for ' + this.registeredLat + " " + this.registeredLon);
-      }, (err) => {
-        console.log('Geofence failed to add', err);
-      });
+  //     this.geofence.addOrUpdate(fence).then(() => {
+  //       this.registeredLat = data.coords.latitude;
+  //       this.registeredLon = data.coords.longitude;
+  //       alert('Geofence added for ' + this.registeredLat + " " + this.registeredLon);
+  //     }, (err) => {
+  //       console.log('Geofence failed to add', err);
+  //     });
 
-      this.geofence.onTransitionReceived().subscribe(resp => {
-        alert(resp);
-      });
-    });
-  }
+  //     this.geofence.onTransitionReceived().subscribe(resp => {
+  //       alert(resp);
+  //     });
+  //   });
+  // }
 
   registerMyLocation() {
     this.geolocation.getCurrentPosition().then(data => {
       this.registeredLat = data.coords.latitude;
       this.registeredLon = data.coords.longitude;
     });
+
+    this.enableTracking();
   }
 
   enableTracking() {
@@ -115,31 +110,28 @@ export class HomePage {
     this.backgroundGeolocation.configure(config).then(() => {
       this.backgroundGeolocation.on(BackgroundGeolocationEvents.location).subscribe((location: BackgroundGeolocationResponse) => {
         console.log(location);
+        
         this.currentLat = location.latitude;
         this.currentLon = location.longitude;
         let distance = this.calcDistance(this.currentLat, this.currentLon, this.registeredLat, this.registeredLon);
 
         if (distance > 0.25) {
-          // Schedule a local notification
-          this.localNotifications.schedule({
-            id: new Date().getMilliseconds(),
-            title: distance + '' + 'Welcome to Jeddah Airport',
-            text: 'Dear Employee \nWelcome to Jeddah Airport, Hope you have a wonderful experience with SAUDIA',
-            foreground: true
+          let options = {
+            "title": 'Welcome to Jeddah Airport',
+            "message": 'Dear Employee \nWelcome to Jeddah Airport, Hope you have a wonderful experience with SAUDIA',
+          };
+
+          //Display local notification
+          LocalNotification.invoke(options, (res) => {
+            console.log(res);
+          }, (err) => {
+            console.log(err);
           });
 
           // stop recording location
           this.backgroundGeolocation.stop();
-        } else {
-          // Schedule a local notification
-          this.localNotifications.schedule({
-            id: new Date().getMilliseconds(),
-            title: this.currentLat + " " + this.currentLon,
-            text: distance + " " + this.registeredLat + " " + this.registeredLon,
-            foreground: true
-          });
-        }
-
+        } 
+       
         this.backgroundGeolocation.finish(); // FOR IOS ONLY
       });
     });
@@ -148,22 +140,22 @@ export class HomePage {
     this.backgroundGeolocation.start();
   }
 
-  getDistanceFromLatLonInKm(current_lat, current_lon, jeddah_lat, jeddah_lon) {
-    var R = 6371; // Radius of the earth in km
-    var dLat = this.deg2rad(jeddah_lat - current_lat);  // deg2rad below
-    var dLon = this.deg2rad(jeddah_lon - current_lon);
-    var a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.deg2rad(current_lat)) * Math.cos(this.deg2rad(jeddah_lat)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    var d = R * c; // Distance in km
-    return d;
-  }
+  // getDistanceFromLatLonInKm(current_lat, current_lon, jeddah_lat, jeddah_lon) {
+  //   var R = 6371; // Radius of the earth in km
+  //   var dLat = this.deg2rad(jeddah_lat - current_lat);  // deg2rad below
+  //   var dLon = this.deg2rad(jeddah_lon - current_lon);
+  //   var a =
+  //     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+  //     Math.cos(this.deg2rad(current_lat)) * Math.cos(this.deg2rad(jeddah_lat)) *
+  //     Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  //   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  //   var d = R * c; // Distance in km
+  //   return d;
+  // }
 
-  deg2rad(deg) {
-    return deg * (Math.PI / 180)
-  }
+  // deg2rad(deg) {
+  //   return deg * (Math.PI / 180)
+  // }
 
   calcDistance(lat1, lon1, lat2, lon2) {
     if ((lat1 == lat2) && (lon1 == lon2)) {
