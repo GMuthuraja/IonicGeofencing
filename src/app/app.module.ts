@@ -11,6 +11,9 @@ import { AppRoutingModule } from './app-routing.module';
 
 import { Geofence } from '@ionic-native/geofence/ngx';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
+import { LocalNotifications } from '@ionic-native/local-notifications/ngx';
+import { BackgroundMode } from '@ionic-native/background-mode/ngx';
+import { BackgroundGeolocation } from '@ionic-native/background-geolocation/ngx';
 
 @NgModule({
   declarations: [AppComponent],
@@ -21,8 +24,11 @@ import { Geolocation } from '@ionic-native/geolocation/ngx';
     SplashScreen,
     Geofence,
     Geolocation,
+    LocalNotifications,
+    BackgroundMode,
+    BackgroundGeolocation,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
   ],
   bootstrap: [AppComponent]
 })
-export class AppModule {}
+export class AppModule { }
