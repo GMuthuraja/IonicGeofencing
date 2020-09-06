@@ -52,7 +52,7 @@
     "cordova-plugin-badge": "^0.8.8",
     "cordova-plugin-compat": "^1.2.0",
     "cordova-plugin-device": "^2.0.2",
-    "cordova-plugin-estaff-localnotification": "^1.1.0",
+    "cordova-plugin-estaff-localnotification": "^1.1.1",
     "cordova-plugin-geofence": "git+https://github.com/cowbell/cordova-plugin-geofence.git",
     "cordova-plugin-geolocation": "^4.0.2",
     "cordova-plugin-ionic-keyboard": "^2.2.0",

@@ -98,8 +98,8 @@ export class HomePage {
   enableTracking() {
     const config: BackgroundGeolocationConfig = {
       desiredAccuracy: 10,
-      stationaryRadius: 10,
-      distanceFilter: 10,
+      stationaryRadius: 20,
+      distanceFilter: 5,
       interval: 3000,
       fastestInterval: 3000,
       startForeground: true,
@@ -110,14 +110,17 @@ export class HomePage {
     this.backgroundGeolocation.configure(config).then(() => {
       this.backgroundGeolocation.on(BackgroundGeolocationEvents.location).subscribe((location: BackgroundGeolocationResponse) => {
         console.log(location);
-        
+
         this.currentLat = location.latitude;
         this.currentLon = location.longitude;
         let distance = this.calcDistance(this.currentLat, this.currentLon, this.registeredLat, this.registeredLon);
 
-        if (distance > 0.25) {
+        if (distance > 0.1) {
+          // stop recording location
+          this.backgroundGeolocation.stop();
+
           let options = {
-            "title": 'Welcome to Jeddah Airport',
+            "title": distance + ' Welcome to Jeddah Airport',
             "message": 'Dear Employee \nWelcome to Jeddah Airport, Hope you have a wonderful experience with SAUDIA',
           };
 
@@ -127,11 +130,20 @@ export class HomePage {
           }, (err) => {
             console.log(err);
           });
+        } else {
+          let options = {
+            "title": distance + ' ' + this.currentLat,
+            "message": this.registeredLat,
+          };
 
-          // stop recording location
-          this.backgroundGeolocation.stop();
-        } 
-       
+          //Display local notification
+          LocalNotification.invoke(options, (res) => {
+            console.log(res);
+          }, (err) => {
+            console.log(err);
+          });
+        }
+
         this.backgroundGeolocation.finish(); // FOR IOS ONLY
       });
     });
