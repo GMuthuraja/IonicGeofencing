@@ -99,8 +99,8 @@ export class HomePage {
   enableTracking() {
     const config: BackgroundGeolocationConfig = {
       desiredAccuracy: 10,
-      stationaryRadius: 2,
-      distanceFilter: 5,
+      stationaryRadius: 10,
+      distanceFilter: 10,
       interval: 5000,
       fastestInterval: 5000,
       startForeground: true,
