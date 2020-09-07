@@ -92,17 +92,19 @@ export class HomePage {
       this.registeredLon = data.coords.longitude;
     });
 
+    this.backgroundGeolocation.deleteAllLocations();
     this.enableTracking();
   }
 
   enableTracking() {
     const config: BackgroundGeolocationConfig = {
       desiredAccuracy: 10,
-      stationaryRadius: 20,
+      stationaryRadius: 2,
       distanceFilter: 5,
-      interval: 3000,
-      fastestInterval: 3000,
+      interval: 5000,
+      fastestInterval: 5000,
       startForeground: true,
+      startOnBoot: true,
       debug: true, //  enable this hear sounds for background-geolocation life-cycle.
       stopOnTerminate: false, // enable this to clear background location settings when the app terminates
     };
@@ -115,25 +117,14 @@ export class HomePage {
         this.currentLon = location.longitude;
         let distance = this.calcDistance(this.currentLat, this.currentLon, this.registeredLat, this.registeredLon);
 
-        if (distance > 0.1) {
+        if (distance > 0.2) {
+
           // stop recording location
           this.backgroundGeolocation.stop();
 
           let options = {
-            "title": distance + ' Welcome to Jeddah Airport',
+            "title": 'Welcome to Jeddah Airport',
             "message": 'Dear Employee \nWelcome to Jeddah Airport, Hope you have a wonderful experience with SAUDIA',
-          };
-
-          //Display local notification
-          LocalNotification.invoke(options, (res) => {
-            console.log(res);
-          }, (err) => {
-            console.log(err);
-          });
-        } else {
-          let options = {
-            "title": distance + ' ' + this.currentLat,
-            "message": this.registeredLat,
           };
 
           //Display local notification
